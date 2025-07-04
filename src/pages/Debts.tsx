@@ -2,14 +2,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, AlertTriangle, Calendar } from "lucide-react";
+import { AlertTriangle, Calendar } from "lucide-react";
 import { useDebts } from "@/hooks/useDebts";
+import { AddDebtModal } from "@/components/modals/AddDebtModal";
+import { MobileCardView } from "@/components/MobileCardView";
 
 const Debts = () => {
   const { data: debts, isLoading } = useDebts();
 
   if (isLoading) {
-    return <div>Loading debts...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const totalDebt = debts?.reduce((sum, debt) => sum + (debt.balance || 0), 0) || 0;
@@ -43,10 +49,7 @@ const Debts = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Debts</h2>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Debt
-        </Button>
+        <AddDebtModal />
       </div>
 
       {/* Debt Summary */}
@@ -81,81 +84,89 @@ const Debts = () => {
 
       {/* Debts List */}
       <div className="space-y-4">
-        {debts
-          ?.sort((a, b) => (b.interest_rate || 0) - (a.interest_rate || 0))
-          .map((debt) => {
-            const daysUntilDue = debt.due_date ? getDaysUntilDue(debt.due_date) : 0;
-            const isOverdue = daysUntilDue < 0;
-            const isDueSoon = daysUntilDue <= 7 && daysUntilDue >= 0;
-            
-            return (
-              <Card key={debt.id} className="bg-card border-border">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
-                        <AlertTriangle className="w-5 h-5 text-red-500" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">{debt.name}</CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge className={getStrategyColor(debt.strategy || "")}>
-                            {debt.strategy}
-                          </Badge>
-                          {debt.due_date && (
-                            <Badge variant={isOverdue ? "destructive" : isDueSoon ? "secondary" : "outline"}>
-                              <Calendar className="w-3 h-3 mr-1" />
-                              {isOverdue ? `${Math.abs(daysUntilDue)} days overdue` : 
-                               isDueSoon ? `Due in ${daysUntilDue} days` : 
-                               `Due ${new Date(debt.due_date).toLocaleDateString()}`}
+        {/* Mobile View */}
+        <div className="md:hidden">
+          <MobileCardView data={debts?.sort((a, b) => (b.interest_rate || 0) - (a.interest_rate || 0)) || []} type="debt" />
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden md:block">
+          {debts
+            ?.sort((a, b) => (b.interest_rate || 0) - (a.interest_rate || 0))
+            .map((debt) => {
+              const daysUntilDue = debt.due_date ? getDaysUntilDue(debt.due_date) : 0;
+              const isOverdue = daysUntilDue < 0;
+              const isDueSoon = daysUntilDue <= 7 && daysUntilDue >= 0;
+              
+              return (
+                <Card key={debt.id} className="bg-card border-border">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
+                          <AlertTriangle className="w-5 h-5 text-red-500" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{debt.name}</CardTitle>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge className={getStrategyColor(debt.strategy || "")}>
+                              {debt.strategy}
                             </Badge>
-                          )}
+                            {debt.due_date && (
+                              <Badge variant={isOverdue ? "destructive" : isDueSoon ? "secondary" : "outline"}>
+                                <Calendar className="w-3 h-3 mr-1" />
+                                {isOverdue ? `${Math.abs(daysUntilDue)} days overdue` : 
+                                 isDueSoon ? `Due in ${daysUntilDue} days` : 
+                                 `Due ${new Date(debt.due_date).toLocaleDateString()}`}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-red-500">${(debt.balance || 0).toLocaleString()}</div>
-                      <div className="text-sm text-muted-foreground">{debt.interest_rate}% APR</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Minimum Payment</p>
-                        <p className="text-lg font-semibold">${(debt.minimum_payment || 0).toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Monthly Interest</p>
-                        <p className="text-lg font-semibold text-red-500">
-                          ${(((debt.balance || 0) * (debt.interest_rate || 0) / 100) / 12).toFixed(2)}
-                        </p>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-red-500">${(debt.balance || 0).toLocaleString()}</div>
+                        <div className="text-sm text-muted-foreground">{debt.interest_rate}% APR</div>
                       </div>
                     </div>
-                    
-                    {debt.notes && (
-                      <div className="p-3 bg-accent/50 rounded-lg">
-                        <p className="text-sm text-muted-foreground">{debt.notes}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Minimum Payment</p>
+                          <p className="text-lg font-semibold">${(debt.minimum_payment || 0).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Monthly Interest</p>
+                          <p className="text-lg font-semibold text-red-500">
+                            ${(((debt.balance || 0) * (debt.interest_rate || 0) / 100) / 12).toFixed(2)}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                    
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        Make Payment
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        Edit Strategy
-                      </Button>
+                      
+                      {debt.notes && (
+                        <div className="p-3 bg-accent/50 rounded-lg">
+                          <p className="text-sm text-muted-foreground">{debt.notes}</p>
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          Make Payment
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Edit Strategy
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              );
+            })}
+        </div>
       </div>
     </div>
   );

@@ -1,15 +1,20 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Plus, TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { useInvestments } from "@/hooks/useInvestments";
+import { AddInvestmentModal } from "@/components/modals/AddInvestmentModal";
+import { MobileCardView } from "@/components/MobileCardView";
 
 const Investments = () => {
   const { data: investments, isLoading } = useInvestments();
 
   if (isLoading) {
-    return <div>Loading investments...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const calculateGainLoss = (quantity: number, buyPrice: number, currentPrice: number) => {
@@ -34,10 +39,7 @@ const Investments = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Investments</h2>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Investment
-        </Button>
+        <AddInvestmentModal />
       </div>
 
       {/* Investment Summary */}
@@ -90,7 +92,11 @@ const Investments = () => {
           <CardTitle>Portfolio Holdings</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <MobileCardView data={investments || []} type="investment" />
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">

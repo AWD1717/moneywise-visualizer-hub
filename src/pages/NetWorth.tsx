@@ -3,12 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useNetWorth } from "@/hooks/useNetWorth";
+import { MobileCardView } from "@/components/MobileCardView";
 
 const NetWorth = () => {
   const { data: netWorthHistory, isLoading } = useNetWorth();
 
   if (isLoading) {
-    return <div>Loading net worth data...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (!netWorthHistory || netWorthHistory.length === 0) {
@@ -146,7 +151,11 @@ const NetWorth = () => {
           <CardTitle>Historical Data</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <MobileCardView data={netWorthHistory} type="networth" />
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">

@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Filter } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { useCashflows } from "@/hooks/useCashflows";
+import { AddTransactionModal } from "@/components/modals/AddTransactionModal";
+import { MobileCardView } from "@/components/MobileCardView";
 
 const Cashflows = () => {
   const { data: cashflowsData, isLoading } = useCashflows();
@@ -14,7 +16,11 @@ const Cashflows = () => {
   const itemsPerPage = 10;
 
   if (isLoading) {
-    return <div>Loading cash flows...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const filteredCashflows = cashflowsData?.filter(
@@ -46,10 +52,7 @@ const Cashflows = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Cash Flows</h2>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Transaction
-        </Button>
+        <AddTransactionModal />
       </div>
 
       <Card className="bg-card border-border">
@@ -74,7 +77,11 @@ const Cashflows = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <MobileCardView data={currentCashflows} type="cashflow" />
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">

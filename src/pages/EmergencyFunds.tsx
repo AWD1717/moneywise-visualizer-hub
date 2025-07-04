@@ -1,20 +1,184 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Shield, TrendingUp, AlertCircle, CheckCircle, Plus } from "lucide-react";
 import { useEmergencyFunds } from "@/hooks/useEmergencyFunds";
+import { useUpdateEmergencyFund } from "@/hooks/useEmergencyFundMutations";
 
 const EmergencyFunds = () => {
-  const { data: emergencyFund, isLoading } = useEmergencyFunds();
+  const { data: emergencyFund, isLoading, error } = useEmergencyFunds();
+  const updateEmergencyFund = useUpdateEmergencyFund();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    accumulated_funds: "",
+    custom_target: "",
+    monthly_expenses: "",
+    job_stability: "",
+    dependents: "",
+    recommended_range: ""
+  });
 
   if (isLoading) {
-    return <div>Loading emergency fund data...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-lg font-medium text-red-500">Error loading emergency fund data</p>
+          <p className="text-sm text-muted-foreground">Please try again later</p>
+        </div>
+      </div>
+    );
   }
 
   if (!emergencyFund) {
-    return <div>No emergency fund data available</div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold tracking-tight">Emergency Fund</h2>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90">
+                <Plus className="w-4 h-4 mr-2" />
+                Setup Emergency Fund
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Setup Emergency Fund</DialogTitle>
+              </DialogHeader>
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  updateEmergencyFund.mutate({
+                    accumulated_funds: parseFloat(formData.accumulated_funds) || 0,
+                    custom_target: parseFloat(formData.custom_target) || 0,
+                    monthly_expenses: parseFloat(formData.monthly_expenses) || 0,
+                    job_stability: formData.job_stability,
+                    dependents: parseInt(formData.dependents) || 0,
+                    recommended_range: formData.recommended_range
+                  });
+                  setIsModalOpen(false);
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <Label htmlFor="monthly_expenses">Monthly Expenses ($)</Label>
+                  <Input
+                    id="monthly_expenses"
+                    type="number"
+                    value={formData.monthly_expenses}
+                    onChange={(e) => setFormData(prev => ({ ...prev, monthly_expenses: e.target.value }))}
+                    placeholder="5000"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="job_stability">Job Stability</Label>
+                  <Select value={formData.job_stability} onValueChange={(value) => setFormData(prev => ({ ...prev, job_stability: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select job stability" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="stable">Stable</SelectItem>
+                      <SelectItem value="moderate">Moderate</SelectItem>
+                      <SelectItem value="unstable">Unstable</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="dependents">Number of Dependents</Label>
+                  <Input
+                    id="dependents"
+                    type="number"
+                    value={formData.dependents}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dependents: e.target.value }))}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="recommended_range">Recommended Range</Label>
+                  <Select value={formData.recommended_range} onValueChange={(value) => setFormData(prev => ({ ...prev, recommended_range: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select recommended range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3-6 months">3-6 months</SelectItem>
+                      <SelectItem value="6-9 months">6-9 months</SelectItem>
+                      <SelectItem value="9-12 months">9-12 months</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="custom_target">Target Amount ($)</Label>
+                  <Input
+                    id="custom_target"
+                    type="number"
+                    value={formData.custom_target}
+                    onChange={(e) => setFormData(prev => ({ ...prev, custom_target: e.target.value }))}
+                    placeholder="30000"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="accumulated_funds">Current Accumulated Funds ($)</Label>
+                  <Input
+                    id="accumulated_funds"
+                    type="number"
+                    value={formData.accumulated_funds}
+                    onChange={(e) => setFormData(prev => ({ ...prev, accumulated_funds: e.target.value }))}
+                    placeholder="10000"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button type="submit" disabled={updateEmergencyFund.isPending} className="flex-1">
+                    {updateEmergencyFund.isPending ? "Setting up..." : "Setup Emergency Fund"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <Card className="bg-card border-border">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Shield className="w-16 h-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Emergency Fund Setup</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              Set up your emergency fund to track your financial safety net and get personalized recommendations.
+            </p>
+            <Button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary/90">
+              <Plus className="w-4 h-4 mr-2" />
+              Setup Emergency Fund
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const { 
