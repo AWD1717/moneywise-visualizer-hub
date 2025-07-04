@@ -2,50 +2,24 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Plus, AlertTriangle, Calendar, TrendingDown } from "lucide-react";
-
-// Mock data - replace with Supabase data
-const mockDebts = [
-  {
-    id: "1",
-    name: "Credit Card - Chase",
-    balance: 3500,
-    interestRate: 18.99,
-    minimumPayment: 150,
-    dueDate: "2024-02-15",
-    strategy: "Avalanche",
-    notes: "Focus on paying off high interest first",
-  },
-  {
-    id: "2",
-    name: "Student Loan",
-    balance: 12000,
-    interestRate: 4.5,
-    minimumPayment: 200,
-    dueDate: "2024-02-20",
-    strategy: "Standard",
-    notes: "Low interest, regular payments",
-  },
-  {
-    id: "3",
-    name: "Car Loan",
-    balance: 18500,
-    interestRate: 6.8,
-    minimumPayment: 400,
-    dueDate: "2024-02-10",
-    strategy: "Snowball",
-    notes: "Medium priority, good payment history",
-  },
-];
+import { Plus, AlertTriangle, Calendar } from "lucide-react";
+import { useDebts } from "@/hooks/useDebts";
 
 const Debts = () => {
-  const totalDebt = mockDebts.reduce((sum, debt) => sum + debt.balance, 0);
-  const totalMinimumPayments = mockDebts.reduce((sum, debt) => sum + debt.minimumPayment, 0);
-  const averageInterestRate = mockDebts.reduce((sum, debt) => sum + debt.interestRate, 0) / mockDebts.length;
+  const { data: debts, isLoading } = useDebts();
+
+  if (isLoading) {
+    return <div>Loading debts...</div>;
+  }
+
+  const totalDebt = debts?.reduce((sum, debt) => sum + (debt.balance || 0), 0) || 0;
+  const totalMinimumPayments = debts?.reduce((sum, debt) => sum + (debt.minimum_payment || 0), 0) || 0;
+  const averageInterestRate = debts && debts.length > 0 
+    ? debts.reduce((sum, debt) => sum + (debt.interest_rate || 0), 0) / debts.length 
+    : 0;
 
   const getStrategyColor = (strategy: string) => {
-    switch (strategy.toLowerCase()) {
+    switch (strategy?.toLowerCase()) {
       case "avalanche":
         return "bg-red-500/10 text-red-500 border-red-500/20";
       case "snowball":
@@ -107,10 +81,10 @@ const Debts = () => {
 
       {/* Debts List */}
       <div className="space-y-4">
-        {mockDebts
-          .sort((a, b) => b.interestRate - a.interestRate) // Sort by interest rate (avalanche method)
+        {debts
+          ?.sort((a, b) => (b.interest_rate || 0) - (a.interest_rate || 0))
           .map((debt) => {
-            const daysUntilDue = getDaysUntilDue(debt.dueDate);
+            const daysUntilDue = debt.due_date ? getDaysUntilDue(debt.due_date) : 0;
             const isOverdue = daysUntilDue < 0;
             const isDueSoon = daysUntilDue <= 7 && daysUntilDue >= 0;
             
@@ -125,21 +99,23 @@ const Debts = () => {
                       <div>
                         <CardTitle className="text-lg">{debt.name}</CardTitle>
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge className={getStrategyColor(debt.strategy)}>
+                          <Badge className={getStrategyColor(debt.strategy || "")}>
                             {debt.strategy}
                           </Badge>
-                          <Badge variant={isOverdue ? "destructive" : isDueSoon ? "secondary" : "outline"}>
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {isOverdue ? `${Math.abs(daysUntilDue)} days overdue` : 
-                             isDueSoon ? `Due in ${daysUntilDue} days` : 
-                             `Due ${new Date(debt.dueDate).toLocaleDateString()}`}
-                          </Badge>
+                          {debt.due_date && (
+                            <Badge variant={isOverdue ? "destructive" : isDueSoon ? "secondary" : "outline"}>
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {isOverdue ? `${Math.abs(daysUntilDue)} days overdue` : 
+                               isDueSoon ? `Due in ${daysUntilDue} days` : 
+                               `Due ${new Date(debt.due_date).toLocaleDateString()}`}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-red-500">${debt.balance.toLocaleString()}</div>
-                      <div className="text-sm text-muted-foreground">{debt.interestRate}% APR</div>
+                      <div className="text-2xl font-bold text-red-500">${(debt.balance || 0).toLocaleString()}</div>
+                      <div className="text-sm text-muted-foreground">{debt.interest_rate}% APR</div>
                     </div>
                   </div>
                 </CardHeader>
@@ -148,12 +124,12 @@ const Debts = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-muted-foreground">Minimum Payment</p>
-                        <p className="text-lg font-semibold">${debt.minimumPayment.toLocaleString()}</p>
+                        <p className="text-lg font-semibold">${(debt.minimum_payment || 0).toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Monthly Interest</p>
                         <p className="text-lg font-semibold text-red-500">
-                          ${((debt.balance * debt.interestRate / 100) / 12).toFixed(2)}
+                          ${(((debt.balance || 0) * (debt.interest_rate || 0) / 100) / 12).toFixed(2)}
                         </p>
                       </div>
                     </div>

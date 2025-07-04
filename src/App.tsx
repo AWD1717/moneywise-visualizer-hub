@@ -25,7 +25,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <SidebarProvider collapsedWidth={64}>
+        <SidebarProvider defaultOpen={true}>
           <div className="min-h-screen flex w-full bg-background">
             <Routes>
               <Route path="/" element={<Layout />}>

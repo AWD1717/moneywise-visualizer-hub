@@ -1,88 +1,41 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
-
-// Mock data - replace with Supabase data
-const mockNetWorthHistory = [
-  {
-    id: "1",
-    calculatedAt: "2023-07-01",
-    totalAssets: 45000,
-    totalLiabilities: 12000,
-    netWorth: 33000,
-  },
-  {
-    id: "2",
-    calculatedAt: "2023-08-01",
-    totalAssets: 47500,
-    totalLiabilities: 11500,
-    netWorth: 36000,
-  },
-  {
-    id: "3",
-    calculatedAt: "2023-09-01",
-    totalAssets: 46800,
-    totalLiabilities: 11000,
-    netWorth: 35800,
-  },
-  {
-    id: "4",
-    calculatedAt: "2023-10-01",
-    totalAssets: 48200,
-    totalLiabilities: 10500,
-    netWorth: 37700,
-  },
-  {
-    id: "5",
-    calculatedAt: "2023-11-01",
-    totalAssets: 50100,
-    totalLiabilities: 10000,
-    netWorth: 40100,
-  },
-  {
-    id: "6",
-    calculatedAt: "2023-12-01",
-    totalAssets: 52300,
-    totalLiabilities: 9500,
-    netWorth: 42800,
-  },
-  {
-    id: "7",
-    calculatedAt: "2024-01-01",
-    totalAssets: 54500,
-    totalLiabilities: 9000,
-    netWorth: 45500,
-  },
-];
+import { TrendingUp, TrendingDown } from "lucide-react";
+import { useNetWorth } from "@/hooks/useNetWorth";
 
 const NetWorth = () => {
-  const currentNetWorth = mockNetWorthHistory[mockNetWorthHistory.length - 1];
-  const previousNetWorth = mockNetWorthHistory[mockNetWorthHistory.length - 2];
+  const { data: netWorthHistory, isLoading } = useNetWorth();
+
+  if (isLoading) {
+    return <div>Loading net worth data...</div>;
+  }
+
+  if (!netWorthHistory || netWorthHistory.length === 0) {
+    return <div>No net worth data available</div>;
+  }
+
+  const currentNetWorth = netWorthHistory[0];
+  const previousNetWorth = netWorthHistory[1];
   
-  const monthlyChange = currentNetWorth.netWorth - previousNetWorth.netWorth;
-  const monthlyChangePercentage = (monthlyChange / previousNetWorth.netWorth) * 100;
+  const monthlyChange = previousNetWorth ? currentNetWorth.net_worth - previousNetWorth.net_worth : 0;
+  const monthlyChangePercentage = previousNetWorth && previousNetWorth.net_worth > 0 ? (monthlyChange / previousNetWorth.net_worth) * 100 : 0;
   const isPositiveChange = monthlyChange >= 0;
 
-  // Calculate year-over-year change
-  const yearAgoNetWorth = mockNetWorthHistory.find(
-    record => new Date(record.calculatedAt).getFullYear() === new Date(currentNetWorth.calculatedAt).getFullYear() - 1
-  );
-  
-  const yearlyChange = yearAgoNetWorth ? currentNetWorth.netWorth - yearAgoNetWorth.netWorth : 0;
-  const yearlyChangePercentage = yearAgoNetWorth ? (yearlyChange / yearAgoNetWorth.netWorth) * 100 : 0;
-
-  const chartData = mockNetWorthHistory.map(record => ({
-    ...record,
-    month: new Date(record.calculatedAt).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-  }));
+  const chartData = netWorthHistory
+    .slice()
+    .reverse()
+    .map(record => ({
+      ...record,
+      month: new Date(record.calculated_at).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+    }));
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Net Worth</h2>
         <div className="text-sm text-muted-foreground">
-          Last calculated: {new Date(currentNetWorth.calculatedAt).toLocaleDateString()}
+          Last calculated: {new Date(currentNetWorth.calculated_at).toLocaleDateString()}
         </div>
       </div>
 
@@ -93,7 +46,7 @@ const NetWorth = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Current Net Worth</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">${currentNetWorth.netWorth.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-primary">${currentNetWorth.net_worth.toLocaleString()}</div>
           </CardContent>
         </Card>
 
@@ -102,7 +55,7 @@ const NetWorth = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Assets</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">${currentNetWorth.totalAssets.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-500">${currentNetWorth.total_assets.toLocaleString()}</div>
           </CardContent>
         </Card>
 
@@ -111,7 +64,7 @@ const NetWorth = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Liabilities</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">${currentNetWorth.totalLiabilities.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-red-500">${currentNetWorth.total_liabilities.toLocaleString()}</div>
           </CardContent>
         </Card>
 
@@ -156,28 +109,28 @@ const NetWorth = () => {
                 }}
                 formatter={(value: number, name: string) => [
                   `$${value.toLocaleString()}`,
-                  name === 'netWorth' ? 'Net Worth' :
-                  name === 'totalAssets' ? 'Total Assets' :
-                  name === 'totalLiabilities' ? 'Total Liabilities' : name
+                  name === 'net_worth' ? 'Net Worth' :
+                  name === 'total_assets' ? 'Total Assets' :
+                  name === 'total_liabilities' ? 'Total Liabilities' : name
                 ]}
               />
               <Line 
                 type="monotone" 
-                dataKey="netWorth" 
+                dataKey="net_worth" 
                 stroke="hsl(var(--primary))" 
                 strokeWidth={3}
                 dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
               />
               <Line 
                 type="monotone" 
-                dataKey="totalAssets" 
+                dataKey="total_assets" 
                 stroke="#10b981" 
                 strokeWidth={2}
                 strokeDasharray="5 5"
               />
               <Line 
                 type="monotone" 
-                dataKey="totalLiabilities" 
+                dataKey="total_liabilities" 
                 stroke="#ef4444" 
                 strokeWidth={2}
                 strokeDasharray="5 5"
@@ -205,45 +158,42 @@ const NetWorth = () => {
                 </tr>
               </thead>
               <tbody>
-                {mockNetWorthHistory
-                  .slice()
-                  .reverse()
-                  .map((record, index) => {
-                    const previousRecord = mockNetWorthHistory[mockNetWorthHistory.length - index - 2];
-                    const change = previousRecord ? record.netWorth - previousRecord.netWorth : 0;
-                    const changePercentage = previousRecord ? (change / previousRecord.netWorth) * 100 : 0;
-                    
-                    return (
-                      <tr key={record.id} className="border-b border-border/50 hover:bg-accent/50">
-                        <td className="py-3 px-4 text-sm">
-                          {new Date(record.calculatedAt).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4 text-right text-sm font-medium text-green-500">
-                          ${record.totalAssets.toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 text-right text-sm font-medium text-red-500">
-                          ${record.totalLiabilities.toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 text-right text-sm font-bold text-primary">
-                          ${record.netWorth.toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 text-right text-sm">
-                          {previousRecord ? (
-                            <div className={change >= 0 ? 'text-green-500' : 'text-red-500'}>
-                              <div className="font-medium">
-                                {change >= 0 ? '+' : ''}${change.toLocaleString()}
-                              </div>
-                              <div className="text-xs">
-                                {change >= 0 ? '+' : ''}{changePercentage.toFixed(2)}%
-                              </div>
+                {netWorthHistory.map((record, index) => {
+                  const previousRecord = netWorthHistory[index + 1];
+                  const change = previousRecord ? record.net_worth - previousRecord.net_worth : 0;
+                  const changePercentage = previousRecord && previousRecord.net_worth > 0 ? (change / previousRecord.net_worth) * 100 : 0;
+                  
+                  return (
+                    <tr key={record.id} className="border-b border-border/50 hover:bg-accent/50">
+                      <td className="py-3 px-4 text-sm">
+                        {new Date(record.calculated_at).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 text-right text-sm font-medium text-green-500">
+                        ${record.total_assets.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right text-sm font-medium text-red-500">
+                        ${record.total_liabilities.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right text-sm font-bold text-primary">
+                        ${record.net_worth.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right text-sm">
+                        {previousRecord ? (
+                          <div className={change >= 0 ? 'text-green-500' : 'text-red-500'}>
+                            <div className="font-medium">
+                              {change >= 0 ? '+' : ''}${change.toLocaleString()}
                             </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            <div className="text-xs">
+                              {change >= 0 ? '+' : ''}{changePercentage.toFixed(2)}%
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

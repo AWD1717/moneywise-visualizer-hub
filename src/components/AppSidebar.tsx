@@ -36,7 +36,7 @@ const navigationItems = [
 ];
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
+  const { open } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -55,10 +55,10 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-border bg-sidebar`} collapsible>
+    <Sidebar className="border-r border-border bg-sidebar">
       <SidebarContent className="p-4">
         <div className="mb-8">
-          {!collapsed && (
+          {open && (
             <div className="flex items-center gap-2 px-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <DollarSign className="w-4 h-4 text-primary-foreground" />
@@ -66,7 +66,7 @@ export function AppSidebar() {
               <span className="font-semibold text-lg">FinanceApp</span>
             </div>
           )}
-          {collapsed && (
+          {!open && (
             <div className="flex justify-center">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <DollarSign className="w-4 h-4 text-primary-foreground" />
@@ -76,7 +76,7 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-xs text-muted-foreground mb-2">MENU</SidebarGroupLabel>}
+          {open && <SidebarGroupLabel className="text-xs text-muted-foreground mb-2">MENU</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {navigationItems.map((item) => (
@@ -84,7 +84,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavClasses(item.url)}>
                       <item.icon className="w-4 h-4 shrink-0" />
-                      {!collapsed && <span className="font-medium">{item.title}</span>}
+                      {open && <span className="font-medium">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

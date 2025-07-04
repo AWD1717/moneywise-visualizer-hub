@@ -3,40 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, CreditCard, PiggyBank, Building } from "lucide-react";
-
-// Mock data - replace with Supabase data
-const mockAccounts = [
-  {
-    id: "1",
-    name: "Main Checking",
-    type: "Checking",
-    balance: 12500,
-    currency: "USD",
-  },
-  {
-    id: "2",
-    name: "Emergency Savings",
-    type: "Savings",
-    balance: 25000,
-    currency: "USD",
-  },
-  {
-    id: "3",
-    name: "Investment Portfolio",
-    type: "Investment",
-    balance: 48500,
-    currency: "USD",
-  },
-  {
-    id: "4",
-    name: "Credit Card",
-    type: "Credit",
-    balance: -2300,
-    currency: "USD",
-  },
-];
+import { useLiquidAssets } from "@/hooks/useLiquidAssets";
 
 const Accounts = () => {
+  const { data: accounts, isLoading } = useLiquidAssets();
+
   const getAccountIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case "checking":
@@ -66,13 +37,15 @@ const Accounts = () => {
     }
   };
 
-  const totalAssets = mockAccounts
-    .filter(account => account.balance > 0)
-    .reduce((sum, account) => sum + account.balance, 0);
+  if (isLoading) {
+    return <div>Loading accounts...</div>;
+  }
 
-  const totalLiabilities = mockAccounts
-    .filter(account => account.balance < 0)
-    .reduce((sum, account) => sum + Math.abs(account.balance), 0);
+  const totalAssets = accounts?.filter(account => account.balance > 0)
+    .reduce((sum, account) => sum + account.balance, 0) || 0;
+
+  const totalLiabilities = accounts?.filter(account => account.balance < 0)
+    .reduce((sum, account) => sum + Math.abs(account.balance), 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -116,8 +89,8 @@ const Accounts = () => {
 
       {/* Accounts List */}
       <div className="grid gap-4 md:grid-cols-2">
-        {mockAccounts.map((account) => {
-          const AccountIcon = getAccountIcon(account.type);
+        {accounts?.map((account) => {
+          const AccountIcon = getAccountIcon(account.accounts?.type || "");
           
           return (
             <Card key={account.id} className="bg-card border-border hover:bg-accent/50 transition-colors">
@@ -128,9 +101,9 @@ const Accounts = () => {
                       <AccountIcon className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{account.name}</CardTitle>
-                      <Badge className={getAccountTypeColor(account.type)}>
-                        {account.type}
+                      <CardTitle className="text-lg">{account.accounts?.name}</CardTitle>
+                      <Badge className={getAccountTypeColor(account.accounts?.type || "")}>
+                        {account.accounts?.type}
                       </Badge>
                     </div>
                   </div>
@@ -145,7 +118,6 @@ const Accounts = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-muted-foreground">{account.currency}</p>
                     <Button variant="outline" size="sm">
                       View Details
                     </Button>

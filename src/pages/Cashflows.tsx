@@ -5,52 +5,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Filter } from "lucide-react";
-
-// Mock data - replace with Supabase data
-const mockCashflows = [
-  {
-    id: "1",
-    date: "2024-01-15",
-    account: "Main Checking",
-    type: "Income",
-    category: "Salary",
-    description: "Monthly Salary",
-    credit: 5000,
-    debit: 0,
-  },
-  {
-    id: "2",
-    date: "2024-01-16",
-    account: "Main Checking",
-    type: "Expense",
-    category: "Food & Dining",
-    description: "Grocery Shopping",
-    credit: 0,
-    debit: 150,
-  },
-  {
-    id: "3",
-    date: "2024-01-17",
-    account: "Savings",
-    type: "Transfer",
-    category: "Savings",
-    description: "Monthly Savings",
-    credit: 0,
-    debit: 1000,
-  },
-];
+import { useCashflows } from "@/hooks/useCashflows";
 
 const Cashflows = () => {
+  const { data: cashflowsData, isLoading } = useCashflows();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredCashflows = mockCashflows.filter(
+  if (isLoading) {
+    return <div>Loading cash flows...</div>;
+  }
+
+  const filteredCashflows = cashflowsData?.filter(
     (flow) =>
-      flow.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      flow.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      flow.account.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      flow.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      flow.categories?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      flow.accounts?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
   const totalPages = Math.ceil(filteredCashflows.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -58,12 +30,12 @@ const Cashflows = () => {
   const currentCashflows = filteredCashflows.slice(startIndex, endIndex);
 
   const getTypeColor = (type: string) => {
-    switch (type) {
-      case "Income":
+    switch (type?.toLowerCase()) {
+      case "income":
         return "bg-green-500/10 text-green-500 border-green-500/20";
-      case "Expense":
+      case "expense":
         return "bg-red-500/10 text-red-500 border-red-500/20";
-      case "Transfer":
+      case "transfer":
         return "bg-blue-500/10 text-blue-500 border-blue-500/20";
       default:
         return "bg-gray-500/10 text-gray-500 border-gray-500/20";
@@ -118,17 +90,19 @@ const Cashflows = () => {
                 {currentCashflows.map((flow) => (
                   <tr key={flow.id} className="border-b border-border/50 hover:bg-accent/50">
                     <td className="py-3 px-4 text-sm">{new Date(flow.date).toLocaleDateString()}</td>
-                    <td className="py-3 px-4 text-sm font-medium">{flow.account}</td>
+                    <td className="py-3 px-4 text-sm font-medium">{flow.accounts?.name}</td>
                     <td className="py-3 px-4">
-                      <Badge className={getTypeColor(flow.type)}>{flow.type}</Badge>
+                      <Badge className={getTypeColor(flow.types?.name || "")}>
+                        {flow.types?.name}
+                      </Badge>
                     </td>
-                    <td className="py-3 px-4 text-sm text-muted-foreground">{flow.category}</td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">{flow.categories?.name}</td>
                     <td className="py-3 px-4 text-sm">{flow.description}</td>
                     <td className="py-3 px-4 text-right text-sm font-medium">
-                      {flow.credit > 0 ? (
-                        <span className="text-green-500">+${flow.credit.toLocaleString()}</span>
+                      {(flow.credit || 0) > 0 ? (
+                        <span className="text-green-500">+${(flow.credit || 0).toLocaleString()}</span>
                       ) : (
-                        <span className="text-red-500">-${flow.debit.toLocaleString()}</span>
+                        <span className="text-red-500">-${(flow.debit || 0).toLocaleString()}</span>
                       )}
                     </td>
                   </tr>

@@ -4,35 +4,34 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Shield, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
-
-// Mock data - replace with Supabase data
-const mockEmergencyFund = {
-  id: "1",
-  jobStability: "Stable",
-  dependents: 2,
-  monthlyExpenses: 4500,
-  recommendedRange: "3-6 months",
-  customTarget: 20000,
-  accumulatedFunds: 12500,
-  fundingDeficit: 7500,
-};
+import { useEmergencyFunds } from "@/hooks/useEmergencyFunds";
 
 const EmergencyFunds = () => {
-  const { 
-    jobStability, 
-    dependents, 
-    monthlyExpenses, 
-    recommendedRange, 
-    customTarget, 
-    accumulatedFunds, 
-    fundingDeficit 
-  } = mockEmergencyFund;
+  const { data: emergencyFund, isLoading } = useEmergencyFunds();
 
-  const completionPercentage = (accumulatedFunds / customTarget) * 100;
-  const monthsCovered = accumulatedFunds / monthlyExpenses;
+  if (isLoading) {
+    return <div>Loading emergency fund data...</div>;
+  }
+
+  if (!emergencyFund) {
+    return <div>No emergency fund data available</div>;
+  }
+
+  const { 
+    job_stability, 
+    dependents, 
+    monthly_expenses, 
+    recommended_range, 
+    custom_target, 
+    accumulated_funds, 
+    funding_deficit 
+  } = emergencyFund;
+
+  const completionPercentage = (custom_target || 0) > 0 ? ((accumulated_funds || 0) / (custom_target || 1)) * 100 : 0;
+  const monthsCovered = (monthly_expenses || 0) > 0 ? (accumulated_funds || 0) / (monthly_expenses || 1) : 0;
   
   const getStabilityColor = (stability: string) => {
-    switch (stability.toLowerCase()) {
+    switch (stability?.toLowerCase()) {
       case "stable":
         return "bg-green-500/10 text-green-500 border-green-500/20";
       case "moderate":
@@ -81,12 +80,12 @@ const EmergencyFunds = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Current Amount</span>
-              <span className="text-2xl font-bold text-primary">${accumulatedFunds.toLocaleString()}</span>
+              <span className="text-2xl font-bold text-primary">${(accumulated_funds || 0).toLocaleString()}</span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Target Amount</span>
-              <span className="text-lg font-semibold">${customTarget.toLocaleString()}</span>
+              <span className="text-lg font-semibold">${(custom_target || 0).toLocaleString()}</span>
             </div>
             
             <div className="space-y-2">
@@ -105,8 +104,8 @@ const EmergencyFunds = () => {
             <div className="pt-2 border-t border-border">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Still Need</span>
-                <span className={`font-semibold ${fundingDeficit > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                  ${fundingDeficit > 0 ? fundingDeficit.toLocaleString() : '0'}
+                <span className={`font-semibold ${(funding_deficit || 0) > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                  ${(funding_deficit || 0) > 0 ? (funding_deficit || 0).toLocaleString() : '0'}
                 </span>
               </div>
             </div>
@@ -121,8 +120,8 @@ const EmergencyFunds = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Job Stability</p>
-                <Badge className={getStabilityColor(jobStability)}>
-                  {jobStability}
+                <Badge className={getStabilityColor(job_stability || "")}>
+                  {job_stability}
                 </Badge>
               </div>
               <div>
@@ -133,12 +132,12 @@ const EmergencyFunds = () => {
             
             <div>
               <p className="text-sm text-muted-foreground">Monthly Expenses</p>
-              <p className="text-lg font-semibold">${monthlyExpenses.toLocaleString()}</p>
+              <p className="text-lg font-semibold">${(monthly_expenses || 0).toLocaleString()}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">Recommended Range</p>
-              <p className="text-lg font-semibold">{recommendedRange}</p>
+              <p className="text-lg font-semibold">{recommended_range}</p>
             </div>
             
             <div className="pt-2 border-t border-border">
@@ -165,8 +164,8 @@ const EmergencyFunds = () => {
                   <div>
                     <h4 className="font-semibold text-yellow-500 mb-1">Action Required</h4>
                     <p className="text-sm text-muted-foreground">
-                      You need ${fundingDeficit.toLocaleString()} more to reach your emergency fund target. 
-                      Consider setting up automatic transfers of ${Math.round(fundingDeficit / 12).toLocaleString()} 
+                      You need ${(funding_deficit || 0).toLocaleString()} more to reach your emergency fund target. 
+                      Consider setting up automatic transfers of ${Math.round((funding_deficit || 0) / 12).toLocaleString()} 
                       per month to reach your goal within a year.
                     </p>
                   </div>

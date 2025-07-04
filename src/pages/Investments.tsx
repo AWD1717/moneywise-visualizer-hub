@@ -3,53 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, TrendingUp, TrendingDown } from "lucide-react";
-
-// Mock data - replace with Supabase data
-const mockInvestments = [
-  {
-    id: "1",
-    platform: "E*TRADE",
-    type: "Stock",
-    symbol: "AAPL",
-    name: "Apple Inc.",
-    sector: "Technology",
-    quantity: 50,
-    buyPrice: 150.25,
-    currentPrice: 182.50,
-    currency: "USD",
-  },
-  {
-    id: "2",
-    platform: "Vanguard",
-    type: "ETF",
-    symbol: "VTI",
-    name: "Vanguard Total Stock Market ETF",
-    sector: "Diversified",
-    quantity: 100,
-    buyPrice: 220.80,
-    currentPrice: 235.60,
-    currency: "USD",
-  },
-  {
-    id: "3",
-    platform: "Fidelity",
-    type: "Mutual Fund",
-    symbol: "FXNAX",
-    name: "Fidelity U.S. Bond Index Fund",
-    sector: "Fixed Income",
-    quantity: 200,
-    buyPrice: 11.25,
-    currentPrice: 10.95,
-    currency: "USD",
-  },
-];
+import { useInvestments } from "@/hooks/useInvestments";
 
 const Investments = () => {
+  const { data: investments, isLoading } = useInvestments();
+
+  if (isLoading) {
+    return <div>Loading investments...</div>;
+  }
+
   const calculateGainLoss = (quantity: number, buyPrice: number, currentPrice: number) => {
     const totalBuy = quantity * buyPrice;
     const totalCurrent = quantity * currentPrice;
     const gainLoss = totalCurrent - totalBuy;
-    const percentage = (gainLoss / totalBuy) * 100;
+    const percentage = totalBuy > 0 ? (gainLoss / totalBuy) * 100 : 0;
     
     return {
       amount: gainLoss,
@@ -58,10 +25,10 @@ const Investments = () => {
     };
   };
 
-  const totalValue = mockInvestments.reduce((sum, inv) => sum + (inv.quantity * inv.currentPrice), 0);
-  const totalCost = mockInvestments.reduce((sum, inv) => sum + (inv.quantity * inv.buyPrice), 0);
+  const totalValue = investments?.reduce((sum, inv) => sum + ((inv.quantity || 0) * (inv.current_price || 0)), 0) || 0;
+  const totalCost = investments?.reduce((sum, inv) => sum + ((inv.quantity || 0) * (inv.buy_price || 0)), 0) || 0;
   const totalGainLoss = totalValue - totalCost;
-  const totalGainLossPercentage = (totalGainLoss / totalCost) * 100;
+  const totalGainLossPercentage = totalCost > 0 ? (totalGainLoss / totalCost) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -138,9 +105,9 @@ const Investments = () => {
                 </tr>
               </thead>
               <tbody>
-                {mockInvestments.map((investment) => {
-                  const gainLoss = calculateGainLoss(investment.quantity, investment.buyPrice, investment.currentPrice);
-                  const marketValue = investment.quantity * investment.currentPrice;
+                {investments?.map((investment) => {
+                  const gainLoss = calculateGainLoss(investment.quantity || 0, investment.buy_price || 0, investment.current_price || 0);
+                  const marketValue = (investment.quantity || 0) * (investment.current_price || 0);
                   
                   return (
                     <tr key={investment.id} className="border-b border-border/50 hover:bg-accent/50">
@@ -162,8 +129,8 @@ const Investments = () => {
                         <Badge variant="secondary">{investment.type}</Badge>
                       </td>
                       <td className="py-3 px-4 text-right text-sm">{investment.quantity}</td>
-                      <td className="py-3 px-4 text-right text-sm">${investment.buyPrice.toFixed(2)}</td>
-                      <td className="py-3 px-4 text-right text-sm font-medium">${investment.currentPrice.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-right text-sm">${(investment.buy_price || 0).toFixed(2)}</td>
+                      <td className="py-3 px-4 text-right text-sm font-medium">${(investment.current_price || 0).toFixed(2)}</td>
                       <td className="py-3 px-4 text-right text-sm font-medium">${marketValue.toLocaleString()}</td>
                       <td className="py-3 px-4 text-right">
                         <div className={`text-sm font-medium ${gainLoss.isGain ? 'text-green-500' : 'text-red-500'}`}>
