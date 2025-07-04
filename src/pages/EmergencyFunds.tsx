@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -11,6 +10,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Shield, TrendingUp, AlertCircle, CheckCircle, Plus } from "lucide-react";
 import { useEmergencyFunds } from "@/hooks/useEmergencyFunds";
 import { useUpdateEmergencyFund } from "@/hooks/useEmergencyFundMutations";
+
+const formatRupiah = (amount: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount).replace('IDR', 'Rp');
+};
 
 const EmergencyFunds = () => {
   const { data: emergencyFund, isLoading, error } = useEmergencyFunds();
@@ -29,6 +37,7 @@ const EmergencyFunds = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="ml-4 text-muted-foreground">Memuat data dana darurat...</p>
       </div>
     );
   }
@@ -38,8 +47,8 @@ const EmergencyFunds = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-lg font-medium text-red-500">Error loading emergency fund data</p>
-          <p className="text-sm text-muted-foreground">Please try again later</p>
+          <p className="text-lg font-medium text-red-500">Error memuat data dana darurat</p>
+          <p className="text-sm text-muted-foreground">Silakan coba lagi nanti</p>
         </div>
       </div>
     );
@@ -49,61 +58,67 @@ const EmergencyFunds = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">Emergency Fund</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Dana Darurat</h2>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90">
                 <Plus className="w-4 h-4 mr-2" />
-                Setup Emergency Fund
+                Setup Dana Darurat
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Setup Emergency Fund</DialogTitle>
+                <DialogTitle>Setup Dana Darurat</DialogTitle>
               </DialogHeader>
               <form 
                 onSubmit={(e) => {
                   e.preventDefault();
+                  const target = parseFloat(formData.custom_target) || 0;
+                  const accumulated = parseFloat(formData.accumulated_funds) || 0;
+                  const deficit = Math.max(0, target - accumulated);
+                  
                   updateEmergencyFund.mutate({
-                    accumulated_funds: parseFloat(formData.accumulated_funds) || 0,
-                    custom_target: parseFloat(formData.custom_target) || 0,
+                    accumulated_funds: accumulated,
+                    custom_target: target,
                     monthly_expenses: parseFloat(formData.monthly_expenses) || 0,
                     job_stability: formData.job_stability,
                     dependents: parseInt(formData.dependents) || 0,
-                    recommended_range: formData.recommended_range
+                    recommended_range: formData.recommended_range,
+                    funding_deficit: deficit
                   });
                   setIsModalOpen(false);
                 }}
                 className="space-y-4"
               >
                 <div>
-                  <Label htmlFor="monthly_expenses">Monthly Expenses ($)</Label>
+                  <Label htmlFor="monthly_expenses">Pengeluaran Bulanan (Rp)</Label>
                   <Input
                     id="monthly_expenses"
                     type="number"
+                    step="1000"
                     value={formData.monthly_expenses}
                     onChange={(e) => setFormData(prev => ({ ...prev, monthly_expenses: e.target.value }))}
-                    placeholder="5000"
+                    placeholder="5000000"
                     required
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="job_stability">Job Stability</Label>
+                  <Label htmlFor="job_stability">Stabilitas Pekerjaan</Label>
                   <Select value={formData.job_stability} onValueChange={(value) => setFormData(prev => ({ ...prev, job_stability: value }))}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select job stability" />
+                      <SelectValue placeholder="Pilih stabilitas pekerjaan" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="stable">Stable</SelectItem>
-                      <SelectItem value="moderate">Moderate</SelectItem>
-                      <SelectItem value="unstable">Unstable</SelectItem>
+                      <SelectItem value="stable">Stabil</SelectItem>
+                      <SelectItem value="moderate">Sedang</SelectItem>
+                      <SelectItem value="unstable">Tidak Stabil</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="dependents">Number of Dependents</Label>
+                  <Label htmlFor="dependents">Jumlah Tanggungan</Label>
                   <Input
                     id="dependents"
                     type="number"
@@ -114,49 +129,51 @@ const EmergencyFunds = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="recommended_range">Recommended Range</Label>
+                  <Label htmlFor="recommended_range">Rentang Rekomendasi</Label>
                   <Select value={formData.recommended_range} onValueChange={(value) => setFormData(prev => ({ ...prev, recommended_range: value }))}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select recommended range" />
+                      <SelectValue placeholder="Pilih rentang rekomendasi" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="3-6 months">3-6 months</SelectItem>
-                      <SelectItem value="6-9 months">6-9 months</SelectItem>
-                      <SelectItem value="9-12 months">9-12 months</SelectItem>
+                      <SelectItem value="3-6 bulan">3-6 bulan</SelectItem>
+                      <SelectItem value="6-9 bulan">6-9 bulan</SelectItem>
+                      <SelectItem value="9-12 bulan">9-12 bulan</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="custom_target">Target Amount ($)</Label>
+                  <Label htmlFor="custom_target">Target Amount (Rp)</Label>
                   <Input
                     id="custom_target"
                     type="number"
+                    step="1000"
                     value={formData.custom_target}
                     onChange={(e) => setFormData(prev => ({ ...prev, custom_target: e.target.value }))}
-                    placeholder="30000"
+                    placeholder="30000000"
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="accumulated_funds">Current Accumulated Funds ($)</Label>
+                  <Label htmlFor="accumulated_funds">Dana Terkumpul Saat Ini (Rp)</Label>
                   <Input
                     id="accumulated_funds"
                     type="number"
+                    step="1000"
                     value={formData.accumulated_funds}
                     onChange={(e) => setFormData(prev => ({ ...prev, accumulated_funds: e.target.value }))}
-                    placeholder="10000"
+                    placeholder="10000000"
                     required
                   />
                 </div>
 
                 <div className="flex gap-2 pt-4">
                   <Button type="submit" disabled={updateEmergencyFund.isPending} className="flex-1">
-                    {updateEmergencyFund.isPending ? "Setting up..." : "Setup Emergency Fund"}
+                    {updateEmergencyFund.isPending ? "Setting up..." : "Setup Dana Darurat"}
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                    Cancel
+                    Batal
                   </Button>
                 </div>
               </form>
@@ -167,13 +184,13 @@ const EmergencyFunds = () => {
         <Card className="bg-card border-border">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Shield className="w-16 h-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Emergency Fund Setup</h3>
+            <h3 className="text-xl font-semibold mb-2">Belum ada data dana darurat</h3>
             <p className="text-muted-foreground text-center mb-6">
-              Set up your emergency fund to track your financial safety net and get personalized recommendations.
+              Setup dana darurat Anda untuk melacak jaring pengaman finansial dan mendapatkan rekomendasi yang dipersonalisasi.
             </p>
             <Button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary/90">
               <Plus className="w-4 h-4 mr-2" />
-              Setup Emergency Fund
+              Setup Dana Darurat
             </Button>
           </CardContent>
         </Card>
@@ -225,10 +242,10 @@ const EmergencyFunds = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Emergency Fund</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Dana Darurat</h2>
         <Button className="bg-primary hover:bg-primary/90">
           <TrendingUp className="w-4 h-4 mr-2" />
-          Add Funds
+          Tambah Dana
         </Button>
       </div>
 
@@ -238,18 +255,18 @@ const EmergencyFunds = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
-              Emergency Fund Status
+              Status Dana Darurat
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Current Amount</span>
-              <span className="text-2xl font-bold text-primary">${(accumulated_funds || 0).toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground">Jumlah Saat Ini</span>
+              <span className="text-2xl font-bold text-primary">{formatRupiah(accumulated_funds || 0)}</span>
             </div>
             
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Target Amount</span>
-              <span className="text-lg font-semibold">${(custom_target || 0).toLocaleString()}</span>
+              <span className="text-lg font-semibold">{formatRupiah(custom_target || 0)}</span>
             </div>
             
             <div className="space-y-2">
@@ -267,9 +284,9 @@ const EmergencyFunds = () => {
             
             <div className="pt-2 border-t border-border">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Still Need</span>
+                <span className="text-sm text-muted-foreground">Masih Perlu</span>
                 <span className={`font-semibold ${(funding_deficit || 0) > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                  ${(funding_deficit || 0) > 0 ? (funding_deficit || 0).toLocaleString() : '0'}
+                  {formatRupiah((funding_deficit || 0) > 0 ? (funding_deficit || 0) : 0)}
                 </span>
               </div>
             </div>
@@ -278,36 +295,36 @@ const EmergencyFunds = () => {
 
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle>Fund Analysis</CardTitle>
+            <CardTitle>Analisis Dana</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Job Stability</p>
+                <p className="text-sm text-muted-foreground">Stabilitas Pekerjaan</p>
                 <Badge className={getStabilityColor(job_stability || "")}>
-                  {job_stability}
+                  {job_stability === 'stable' ? 'Stabil' : job_stability === 'moderate' ? 'Sedang' : 'Tidak Stabil'}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Dependents</p>
+                <p className="text-sm text-muted-foreground">Tanggungan</p>
                 <p className="text-lg font-semibold">{dependents}</p>
               </div>
             </div>
             
             <div>
-              <p className="text-sm text-muted-foreground">Monthly Expenses</p>
-              <p className="text-lg font-semibold">${(monthly_expenses || 0).toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">Pengeluaran Bulanan</p>
+              <p className="text-lg font-semibold">{formatRupiah(monthly_expenses || 0)}</p>
             </div>
             
             <div>
-              <p className="text-sm text-muted-foreground">Recommended Range</p>
+              <p className="text-sm text-muted-foreground">Rentang Rekomendasi</p>
               <p className="text-lg font-semibold">{recommended_range}</p>
             </div>
             
             <div className="pt-2 border-t border-border">
-              <p className="text-sm text-muted-foreground">Current Coverage</p>
+              <p className="text-sm text-muted-foreground">Cakupan Saat Ini</p>
               <p className="text-2xl font-bold text-primary">
-                {monthsCovered.toFixed(1)} months
+                {monthsCovered.toFixed(1)} bulan
               </p>
             </div>
           </CardContent>
@@ -317,7 +334,7 @@ const EmergencyFunds = () => {
       {/* Recommendations */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle>Recommendations</CardTitle>
+          <CardTitle>Rekomendasi</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -326,11 +343,11 @@ const EmergencyFunds = () => {
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-yellow-500 mb-1">Action Required</h4>
+                    <h4 className="font-semibold text-yellow-500 mb-1">Tindakan Diperlukan</h4>
                     <p className="text-sm text-muted-foreground">
-                      You need ${(funding_deficit || 0).toLocaleString()} more to reach your emergency fund target. 
-                      Consider setting up automatic transfers of ${Math.round((funding_deficit || 0) / 12).toLocaleString()} 
-                      per month to reach your goal within a year.
+                      Anda memerlukan {formatRupiah(funding_deficit || 0)} lagi untuk mencapai target dana darurat. 
+                      Pertimbangkan untuk mengatur transfer otomatis sebesar {formatRupiah(Math.round((funding_deficit || 0) / 12))} 
+                      per bulan untuk mencapai target dalam setahun.
                     </p>
                   </div>
                 </div>
@@ -342,10 +359,10 @@ const EmergencyFunds = () => {
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-green-500 mb-1">Congratulations!</h4>
+                    <h4 className="font-semibold text-green-500 mb-1">Selamat!</h4>
                     <p className="text-sm text-muted-foreground">
-                      You've reached your emergency fund target. Consider reviewing your target annually 
-                      or when your expenses change significantly.
+                      Anda telah mencapai target dana darurat. Pertimbangkan untuk meninjau target Anda secara tahunan 
+                      atau ketika pengeluaran Anda berubah secara signifikan.
                     </p>
                   </div>
                 </div>
@@ -354,16 +371,16 @@ const EmergencyFunds = () => {
             
             <div className="grid gap-3 md:grid-cols-2">
               <div className="p-3 bg-accent/50 rounded-lg">
-                <h5 className="font-medium mb-1">High-Yield Savings</h5>
+                <h5 className="font-medium mb-1">Tabungan Berbunga Tinggi</h5>
                 <p className="text-xs text-muted-foreground">
-                  Keep your emergency fund in a high-yield savings account for easy access and growth.
+                  Simpan dana darurat di rekening tabungan berbunga tinggi untuk akses mudah dan pertumbuhan.
                 </p>
               </div>
               
               <div className="p-3 bg-accent/50 rounded-lg">
-                <h5 className="font-medium mb-1">Separate Account</h5>
+                <h5 className="font-medium mb-1">Rekening Terpisah</h5>
                 <p className="text-xs text-muted-foreground">
-                  Keep emergency funds separate from daily spending to avoid temptation.
+                  Pisahkan dana darurat dari pengeluaran harian untuk menghindari godaan.
                 </p>
               </div>
             </div>

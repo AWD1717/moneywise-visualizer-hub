@@ -2,8 +2,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, CreditCard, PiggyBank, Building } from "lucide-react";
+import { CreditCard, PiggyBank, Building } from "lucide-react";
 import { useLiquidAssets } from "@/hooks/useLiquidAssets";
+import { AddAccountModal } from "@/components/modals/AddAccountModal";
+
+const formatRupiah = (amount: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount).replace('IDR', 'Rp');
+};
 
 const Accounts = () => {
   const { data: accounts, isLoading } = useLiquidAssets();
@@ -38,7 +48,11 @@ const Accounts = () => {
   };
 
   if (isLoading) {
-    return <div>Loading accounts...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const totalAssets = accounts?.filter(account => account.balance > 0)
@@ -50,39 +64,36 @@ const Accounts = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Accounts</h2>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Account
-        </Button>
+        <h2 className="text-3xl font-bold tracking-tight">Akun</h2>
+        <AddAccountModal />
       </div>
 
       {/* Account Summary */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Assets</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Aset</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">${totalAssets.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-500">{formatRupiah(totalAssets)}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Liabilities</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Kewajiban</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">${totalLiabilities.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-red-500">{formatRupiah(totalLiabilities)}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Net Worth</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Kekayaan Bersih</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">${(totalAssets - totalLiabilities).toLocaleString()}</div>
+            <div className="text-2xl font-bold text-primary">{formatRupiah(totalAssets - totalLiabilities)}</div>
           </CardContent>
         </Card>
       </div>
@@ -112,14 +123,14 @@ const Accounts = () => {
               <CardContent>
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
+                    <p className="text-sm text-muted-foreground mb-1">Saldo Saat Ini</p>
                     <p className={`text-2xl font-bold ${account.balance >= 0 ? 'text-primary' : 'text-red-500'}`}>
-                      {account.balance >= 0 ? '+' : '-'}${Math.abs(account.balance).toLocaleString()}
+                      {account.balance >= 0 ? '+' : '-'}{formatRupiah(Math.abs(account.balance))}
                     </p>
                   </div>
                   <div className="text-right">
                     <Button variant="outline" size="sm">
-                      View Details
+                      Lihat Detail
                     </Button>
                   </div>
                 </div>

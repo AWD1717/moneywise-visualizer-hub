@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 
 export const AddTransactionModal = () => {
@@ -16,6 +17,34 @@ export const AddTransactionModal = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch accounts, types, and categories
+  const { data: accounts = [] } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("accounts").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: types = [] } = useQuery({
+    queryKey: ["types"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("types").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -33,7 +62,7 @@ export const AddTransactionModal = () => {
 
     try {
       const amount = parseFloat(formData.amount);
-      const month = new Date(formData.date).toLocaleDateString('en-US', { month: 'long' });
+      const month = new Date(formData.date).toLocaleDateString('id-ID', { month: 'long' });
 
       const { error } = await supabase
         .from("cashflows")
@@ -51,8 +80,8 @@ export const AddTransactionModal = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Transaction added successfully",
+        title: "Berhasil",
+        description: "Transaksi berhasil ditambahkan",
       });
 
       setFormData({
@@ -70,7 +99,7 @@ export const AddTransactionModal = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add transaction",
+        description: "Gagal menambahkan transaksi",
         variant: "destructive",
       });
     } finally {
@@ -88,11 +117,11 @@ export const AddTransactionModal = () => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Transaction</DialogTitle>
+          <DialogTitle>Tambah Transaksi Baru</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="date">Date</Label>
+            <Label htmlFor="date">Tanggal</Label>
             <Input
               id="date"
               type="date"
@@ -103,46 +132,95 @@ export const AddTransactionModal = () => {
           </div>
 
           <div>
-            <Label htmlFor="type">Type</Label>
-            <Select value={formData.isCredit ? "credit" : "debit"} onValueChange={(value) => setFormData(prev => ({ ...prev, isCredit: value === "credit" }))}>
+            <Label htmlFor="account">Akun</Label>
+            <Select value={formData.account_id} onValueChange={(value) => setFormData(prev => ({ ...prev, account_id: value }))}>
               <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder="Pilih akun" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="credit">Income</SelectItem>
-                <SelectItem value="debit">Expense</SelectItem>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="type">Tipe</Label>
+            <Select value={formData.type_id} onValueChange={(value) => setFormData(prev => ({ ...prev, type_id: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih tipe" />
+              </SelectTrigger>
+              <SelectContent>
+                {types.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="category">Kategori</Label>
+            <Select value={formData.category_id} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="type">Credit/Debit</Label>
+            <Select value={formData.isCredit ? "credit" : "debit"} onValueChange={(value) => setFormData(prev => ({ ...prev, isCredit: value === "credit" }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih tipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="credit">Pemasukan</SelectItem>
+                <SelectItem value="debit">Pengeluaran</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="amount">Jumlah (Rp)</Label>
             <Input
               id="amount"
               type="number"
-              step="0.01"
+              step="1000"
               value={formData.amount}
               onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              placeholder="0"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Deskripsi</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Transaction description"
+              placeholder="Deskripsi transaksi"
             />
           </div>
 
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? "Adding..." : "Add Transaction"}
+              {loading ? "Menambahkan..." : "Tambah Transaksi"}
             </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Batal
             </Button>
           </div>
         </form>

@@ -9,6 +9,15 @@ import { useCashflows } from "@/hooks/useCashflows";
 import { AddTransactionModal } from "@/components/modals/AddTransactionModal";
 import { MobileCardView } from "@/components/MobileCardView";
 
+const formatRupiah = (amount: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount).replace('IDR', 'Rp');
+};
+
 const Cashflows = () => {
   const { data: cashflowsData, isLoading } = useCashflows();
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,19 +60,19 @@ const Cashflows = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Cash Flows</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Arus Kas</h2>
         <AddTransactionModal />
       </div>
 
       <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Transaction History</CardTitle>
+            <CardTitle>Riwayat Transaksi</CardTitle>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search transactions..."
+                  placeholder="Cari transaksi..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-64 bg-background border-border"
@@ -85,18 +94,18 @@ const Cashflows = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Account</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Type</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Category</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Description</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Amount</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Tanggal</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Akun</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Tipe</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Kategori</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Deskripsi</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Jumlah</th>
                 </tr>
               </thead>
               <tbody>
                 {currentCashflows.map((flow) => (
                   <tr key={flow.id} className="border-b border-border/50 hover:bg-accent/50">
-                    <td className="py-3 px-4 text-sm">{new Date(flow.date).toLocaleDateString()}</td>
+                    <td className="py-3 px-4 text-sm">{new Date(flow.date).toLocaleDateString('id-ID')}</td>
                     <td className="py-3 px-4 text-sm font-medium">{flow.accounts?.name}</td>
                     <td className="py-3 px-4">
                       <Badge className={getTypeColor(flow.types?.name || "")}>
@@ -107,9 +116,9 @@ const Cashflows = () => {
                     <td className="py-3 px-4 text-sm">{flow.description}</td>
                     <td className="py-3 px-4 text-right text-sm font-medium">
                       {(flow.credit || 0) > 0 ? (
-                        <span className="text-green-500">+${(flow.credit || 0).toLocaleString()}</span>
+                        <span className="text-green-500">+{formatRupiah(flow.credit || 0)}</span>
                       ) : (
-                        <span className="text-red-500">-${(flow.debit || 0).toLocaleString()}</span>
+                        <span className="text-red-500">-{formatRupiah(flow.debit || 0)}</span>
                       )}
                     </td>
                   </tr>
@@ -121,8 +130,8 @@ const Cashflows = () => {
           {/* Pagination */}
           <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {Math.min(endIndex, filteredCashflows.length)} of{" "}
-              {filteredCashflows.length} results
+              Menampilkan {startIndex + 1} sampai {Math.min(endIndex, filteredCashflows.length)} dari{" "}
+              {filteredCashflows.length} hasil
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -131,10 +140,10 @@ const Cashflows = () => {
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
               >
-                Previous
+                Sebelumnya
               </Button>
               <span className="text-sm px-3 py-1 bg-primary/10 text-primary rounded">
-                {currentPage} of {totalPages}
+                {currentPage} dari {totalPages}
               </span>
               <Button
                 variant="outline"
@@ -142,7 +151,7 @@ const Cashflows = () => {
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
               >
-                Next
+                Selanjutnya
               </Button>
             </div>
           </div>
