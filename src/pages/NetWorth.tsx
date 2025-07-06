@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useNetWorth } from "@/hooks/useNetWorth";
 import { MobileCardView } from "@/components/MobileCardView";
+import { formatRupiah } from "@/utils/currency";
 
 const NetWorth = () => {
   const { data: netWorthHistory, isLoading } = useNetWorth();
@@ -32,15 +33,15 @@ const NetWorth = () => {
     .reverse()
     .map(record => ({
       ...record,
-      month: new Date(record.calculated_at).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+      month: new Date(record.calculated_at).toLocaleDateString('id-ID', { month: 'short', year: '2-digit' })
     }));
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Net Worth</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Kekayaan Bersih</h2>
         <div className="text-sm text-muted-foreground">
-          Last calculated: {new Date(currentNetWorth.calculated_at).toLocaleDateString()}
+          Terakhir dihitung: {new Date(currentNetWorth.calculated_at).toLocaleDateString('id-ID')}
         </div>
       </div>
 
@@ -48,34 +49,34 @@ const NetWorth = () => {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Current Net Worth</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Kekayaan Bersih Saat Ini</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">${currentNetWorth.net_worth.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-primary">{formatRupiah(currentNetWorth.net_worth)}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Assets</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Aset</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">${currentNetWorth.total_assets.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-500">{formatRupiah(currentNetWorth.total_assets)}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Liabilities</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Kewajiban</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">${currentNetWorth.total_liabilities.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-red-500">{formatRupiah(currentNetWorth.total_liabilities)}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Change</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Perubahan Bulanan</CardTitle>
             {isPositiveChange ? (
               <TrendingUp className="h-4 w-4 text-green-500" />
             ) : (
@@ -84,12 +85,12 @@ const NetWorth = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
-              {isPositiveChange ? '+' : ''}${monthlyChange.toLocaleString()}
+              {isPositiveChange ? '+' : ''}{formatRupiah(monthlyChange)}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className={isPositiveChange ? 'text-green-500' : 'text-red-500'}>
                 {isPositiveChange ? '+' : ''}{monthlyChangePercentage.toFixed(2)}%
-              </span> from last month
+              </span> dari bulan lalu
             </p>
           </CardContent>
         </Card>
@@ -98,7 +99,7 @@ const NetWorth = () => {
       {/* Net Worth Chart */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle>Net Worth Trend</CardTitle>
+          <CardTitle>Tren Kekayaan Bersih</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
@@ -113,10 +114,10 @@ const NetWorth = () => {
                   borderRadius: "6px"
                 }}
                 formatter={(value: number, name: string) => [
-                  `$${value.toLocaleString()}`,
-                  name === 'net_worth' ? 'Net Worth' :
-                  name === 'total_assets' ? 'Total Assets' :
-                  name === 'total_liabilities' ? 'Total Liabilities' : name
+                  formatRupiah(value),
+                  name === 'net_worth' ? 'Kekayaan Bersih' :
+                  name === 'total_assets' ? 'Total Aset' :
+                  name === 'total_liabilities' ? 'Total Kewajiban' : name
                 ]}
               />
               <Line 
@@ -148,7 +149,7 @@ const NetWorth = () => {
       {/* Net Worth History Table */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle>Historical Data</CardTitle>
+          <CardTitle>Data Historis</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Mobile View */}
@@ -159,11 +160,11 @@ const NetWorth = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Total Assets</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Total Liabilities</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Net Worth</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Change</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Tanggal</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Total Aset</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Total Kewajiban</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Kekayaan Bersih</th>
+                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Perubahan</th>
                 </tr>
               </thead>
               <tbody>
@@ -175,22 +176,22 @@ const NetWorth = () => {
                   return (
                     <tr key={record.id} className="border-b border-border/50 hover:bg-accent/50">
                       <td className="py-3 px-4 text-sm">
-                        {new Date(record.calculated_at).toLocaleDateString()}
+                        {new Date(record.calculated_at).toLocaleDateString('id-ID')}
                       </td>
                       <td className="py-3 px-4 text-right text-sm font-medium text-green-500">
-                        ${record.total_assets.toLocaleString()}
+                        {formatRupiah(record.total_assets)}
                       </td>
                       <td className="py-3 px-4 text-right text-sm font-medium text-red-500">
-                        ${record.total_liabilities.toLocaleString()}
+                        {formatRupiah(record.total_liabilities)}
                       </td>
                       <td className="py-3 px-4 text-right text-sm font-bold text-primary">
-                        ${record.net_worth.toLocaleString()}
+                        {formatRupiah(record.net_worth)}
                       </td>
                       <td className="py-3 px-4 text-right text-sm">
                         {previousRecord ? (
                           <div className={change >= 0 ? 'text-green-500' : 'text-red-500'}>
                             <div className="font-medium">
-                              {change >= 0 ? '+' : ''}${change.toLocaleString()}
+                              {change >= 0 ? '+' : ''}{formatRupiah(change)}
                             </div>
                             <div className="text-xs">
                               {change >= 0 ? '+' : ''}{changePercentage.toFixed(2)}%

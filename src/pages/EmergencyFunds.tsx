@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -7,18 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Shield, TrendingUp, AlertCircle, CheckCircle, Plus } from "lucide-react";
+import { Shield, TrendingUp, AlertCircle, CheckCircle, Plus, PiggyBank } from "lucide-react";
 import { useEmergencyFunds } from "@/hooks/useEmergencyFunds";
 import { useUpdateEmergencyFund } from "@/hooks/useEmergencyFundMutations";
-
-const formatRupiah = (amount: number) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount).replace('IDR', 'Rp');
-};
+import { formatRupiah } from "@/utils/currency";
 
 const EmergencyFunds = () => {
   const { data: emergencyFund, isLoading, error } = useEmergencyFunds();
@@ -32,6 +25,24 @@ const EmergencyFunds = () => {
     dependents: "",
     recommended_range: ""
   });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = parseFloat(formData.custom_target) || 0;
+    const accumulated = parseFloat(formData.accumulated_funds) || 0;
+    const deficit = Math.max(0, target - accumulated);
+    
+    updateEmergencyFund.mutate({
+      accumulated_funds: accumulated,
+      custom_target: target,
+      monthly_expenses: parseFloat(formData.monthly_expenses) || 0,
+      job_stability: formData.job_stability,
+      dependents: parseInt(formData.dependents) || 0,
+      recommended_range: formData.recommended_range,
+      funding_deficit: deficit
+    });
+    setIsModalOpen(false);
+  };
 
   if (isLoading) {
     return (
@@ -66,32 +77,13 @@ const EmergencyFunds = () => {
                 Setup Dana Darurat
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>Setup Dana Darurat</DialogTitle>
               </DialogHeader>
-              <form 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const target = parseFloat(formData.custom_target) || 0;
-                  const accumulated = parseFloat(formData.accumulated_funds) || 0;
-                  const deficit = Math.max(0, target - accumulated);
-                  
-                  updateEmergencyFund.mutate({
-                    accumulated_funds: accumulated,
-                    custom_target: target,
-                    monthly_expenses: parseFloat(formData.monthly_expenses) || 0,
-                    job_stability: formData.job_stability,
-                    dependents: parseInt(formData.dependents) || 0,
-                    recommended_range: formData.recommended_range,
-                    funding_deficit: deficit
-                  });
-                  setIsModalOpen(false);
-                }}
-                className="space-y-4"
-              >
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="monthly_expenses">Pengeluaran Bulanan (Rp)</Label>
+                  <Label htmlFor="monthly_expenses">Pengeluaran Bulanan</Label>
                   <Input
                     id="monthly_expenses"
                     type="number"
@@ -143,7 +135,7 @@ const EmergencyFunds = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="custom_target">Target Amount (Rp)</Label>
+                  <Label htmlFor="custom_target">Target Dana Darurat</Label>
                   <Input
                     id="custom_target"
                     type="number"
@@ -156,7 +148,7 @@ const EmergencyFunds = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="accumulated_funds">Dana Terkumpul Saat Ini (Rp)</Label>
+                  <Label htmlFor="accumulated_funds">Dana Terkumpul Saat Ini</Label>
                   <Input
                     id="accumulated_funds"
                     type="number"
@@ -170,7 +162,7 @@ const EmergencyFunds = () => {
 
                 <div className="flex gap-2 pt-4">
                   <Button type="submit" disabled={updateEmergencyFund.isPending} className="flex-1">
-                    {updateEmergencyFund.isPending ? "Setting up..." : "Setup Dana Darurat"}
+                    {updateEmergencyFund.isPending ? "Menyimpan..." : "Setup Dana Darurat"}
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
                     Batal
@@ -183,9 +175,9 @@ const EmergencyFunds = () => {
 
         <Card className="bg-card border-border">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Shield className="w-16 h-16 text-muted-foreground mb-4" />
+            <PiggyBank className="w-16 h-16 text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">Belum ada data dana darurat</h3>
-            <p className="text-muted-foreground text-center mb-6">
+            <p className="text-muted-foreground text-center mb-6 max-w-md">
               Setup dana darurat Anda untuk melacak jaring pengaman finansial dan mendapatkan rekomendasi yang dipersonalisasi.
             </p>
             <Button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary/90">
@@ -250,7 +242,7 @@ const EmergencyFunds = () => {
       </div>
 
       {/* Emergency Fund Overview */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -258,36 +250,38 @@ const EmergencyFunds = () => {
               Status Dana Darurat
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Jumlah Saat Ini</span>
-              <span className="text-2xl font-bold text-primary">{formatRupiah(accumulated_funds || 0)}</span>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">Dana Terkumpul</p>
+              <p className="text-3xl font-bold text-primary">{formatRupiah(accumulated_funds || 0)}</p>
             </div>
             
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Target Amount</span>
-              <span className="text-lg font-semibold">{formatRupiah(custom_target || 0)}</span>
-            </div>
-            
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Progress</span>
-                <div className="flex items-center gap-2">
-                  <StatusIcon className={`w-4 h-4 ${getProgressColor()}`} />
-                  <span className={`font-semibold ${getProgressColor()}`}>
-                    {completionPercentage.toFixed(1)}%
+                <span className="text-sm text-muted-foreground">Target</span>
+                <span className="font-semibold">{formatRupiah(custom_target || 0)}</span>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Progress</span>
+                  <div className="flex items-center gap-2">
+                    <StatusIcon className={`w-4 h-4 ${getProgressColor()}`} />
+                    <span className={`font-semibold ${getProgressColor()}`}>
+                      {completionPercentage.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <Progress value={Math.min(completionPercentage, 100)} className="h-3" />
+              </div>
+              
+              <div className="pt-3 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Masih Dibutuhkan</span>
+                  <span className={`font-semibold ${(funding_deficit || 0) > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {formatRupiah(Math.max(0, funding_deficit || 0))}
                   </span>
                 </div>
-              </div>
-              <Progress value={Math.min(completionPercentage, 100)} className="h-3" />
-            </div>
-            
-            <div className="pt-2 border-t border-border">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Masih Perlu</span>
-                <span className={`font-semibold ${(funding_deficit || 0) > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                  {formatRupiah((funding_deficit || 0) > 0 ? (funding_deficit || 0) : 0)}
-                </span>
               </div>
             </div>
           </CardContent>
@@ -295,34 +289,36 @@ const EmergencyFunds = () => {
 
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle>Analisis Dana</CardTitle>
+            <CardTitle>Analisis & Detail</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Stabilitas Pekerjaan</p>
+                <p className="text-sm text-muted-foreground mb-1">Stabilitas Pekerjaan</p>
                 <Badge className={getStabilityColor(job_stability || "")}>
-                  {job_stability === 'stable' ? 'Stabil' : job_stability === 'moderate' ? 'Sedang' : 'Tidak Stabil'}
+                  {job_stability === 'stable' ? 'Stabil' : 
+                   job_stability === 'moderate' ? 'Sedang' : 
+                   job_stability === 'unstable' ? 'Tidak Stabil' : 'N/A'}
                 </Badge>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Tanggungan</p>
-                <p className="text-lg font-semibold">{dependents}</p>
+                <p className="text-sm text-muted-foreground mb-1">Tanggungan</p>
+                <p className="text-lg font-semibold">{dependents || 0}</p>
               </div>
             </div>
             
             <div>
-              <p className="text-sm text-muted-foreground">Pengeluaran Bulanan</p>
+              <p className="text-sm text-muted-foreground mb-1">Pengeluaran Bulanan</p>
               <p className="text-lg font-semibold">{formatRupiah(monthly_expenses || 0)}</p>
             </div>
             
             <div>
-              <p className="text-sm text-muted-foreground">Rentang Rekomendasi</p>
-              <p className="text-lg font-semibold">{recommended_range}</p>
+              <p className="text-sm text-muted-foreground mb-1">Rentang Rekomendasi</p>
+              <p className="text-lg font-semibold">{recommended_range || 'N/A'}</p>
             </div>
             
-            <div className="pt-2 border-t border-border">
-              <p className="text-sm text-muted-foreground">Cakupan Saat Ini</p>
+            <div className="pt-3 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-1">Cakupan Saat Ini</p>
               <p className="text-2xl font-bold text-primary">
                 {monthsCovered.toFixed(1)} bulan
               </p>
@@ -341,12 +337,14 @@ const EmergencyFunds = () => {
             {completionPercentage < 100 && (
               <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-yellow-500 mb-1">Tindakan Diperlukan</h4>
+                    <h4 className="font-semibold text-yellow-600 mb-2">Tindakan Diperlukan</h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Anda memerlukan {formatRupiah(funding_deficit || 0)} lagi untuk mencapai target dana darurat.
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      Anda memerlukan {formatRupiah(funding_deficit || 0)} lagi untuk mencapai target dana darurat. 
-                      Pertimbangkan untuk mengatur transfer otomatis sebesar {formatRupiah(Math.round((funding_deficit || 0) / 12))} 
+                      💡 <strong>Saran:</strong> Sisihkan {formatRupiah(Math.round((funding_deficit || 0) / 12))} 
                       per bulan untuk mencapai target dalam setahun.
                     </p>
                   </div>
@@ -357,30 +355,36 @@ const EmergencyFunds = () => {
             {completionPercentage >= 100 && (
               <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-green-500 mb-1">Selamat!</h4>
+                    <h4 className="font-semibold text-green-600 mb-2">🎉 Selamat!</h4>
                     <p className="text-sm text-muted-foreground">
-                      Anda telah mencapai target dana darurat. Pertimbangkan untuk meninjau target Anda secara tahunan 
-                      atau ketika pengeluaran Anda berubah secara signifikan.
+                      Anda telah mencapai target dana darurat. Pertimbangkan untuk meninjau target secara tahunan 
+                      atau ketika ada perubahan signifikan pada pengeluaran.
                     </p>
                   </div>
                 </div>
               </div>
             )}
             
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="p-3 bg-accent/50 rounded-lg">
-                <h5 className="font-medium mb-1">Tabungan Berbunga Tinggi</h5>
-                <p className="text-xs text-muted-foreground">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="p-4 bg-accent/30 rounded-lg border border-accent">
+                <h5 className="font-medium mb-2 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  Tabungan Berbunga Tinggi
+                </h5>
+                <p className="text-sm text-muted-foreground">
                   Simpan dana darurat di rekening tabungan berbunga tinggi untuk akses mudah dan pertumbuhan.
                 </p>
               </div>
               
-              <div className="p-3 bg-accent/50 rounded-lg">
-                <h5 className="font-medium mb-1">Rekening Terpisah</h5>
-                <p className="text-xs text-muted-foreground">
-                  Pisahkan dana darurat dari pengeluaran harian untuk menghindari godaan.
+              <div className="p-4 bg-accent/30 rounded-lg border border-accent">
+                <h5 className="font-medium mb-2 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  Rekening Terpisah
+                </h5>
+                <p className="text-sm text-muted-foreground">
+                  Pisahkan dana darurat dari pengeluaran harian untuk menghindari godaan penggunaan.
                 </p>
               </div>
             </div>
