@@ -15,6 +15,7 @@ export const useUpdateEmergencyFund = () => {
       job_stability?: string;
       dependents?: number;
       recommended_range?: string;
+      funding_deficit?: number;
     }) => {
       const { error } = await supabase
         .from("emergency_funds")
