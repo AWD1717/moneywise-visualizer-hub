@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { formatRupiah } from "@/utils/currency";
 
 interface MobileCardViewProps {
   data: any[];
@@ -29,9 +30,9 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
             <div className="text-sm font-medium text-muted-foreground mb-1">
-              {new Date(item.date).toLocaleDateString()}
+              {new Date(item.date).toLocaleDateString('id-ID')}
             </div>
-            <div className="font-semibold text-lg">
+            <div className="font-semibold text-base">
               {item.accounts?.name || 'Unknown Account'}
             </div>
           </div>
@@ -39,7 +40,7 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
             <div className={`text-lg font-bold ${
               (item.credit || 0) > 0 ? 'text-green-500' : 'text-red-500'
             }`}>
-              {(item.credit || 0) > 0 ? '+' : '-'}${Math.abs(item.credit || item.debit || 0).toLocaleString()}
+              {(item.credit || 0) > 0 ? '+' : '-'}{formatRupiah(Math.abs(item.credit || item.debit || 0))}
             </div>
             <Badge variant="outline" className="mt-1">
               {item.categories?.name || 'No Category'}
@@ -94,13 +95,13 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
             </div>
             <div className="text-right">
               <div className="font-semibold">{item.quantity} shares</div>
-              <div className="text-lg font-bold">${(item.current_price || 0).toFixed(2)}</div>
+              <div className="text-lg font-bold">{formatRupiah(item.current_price || 0)}</div>
             </div>
           </div>
           
           <div className="flex justify-between items-center">
             <div className={`text-sm font-medium ${gainLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {gainLoss >= 0 ? '+' : ''}${gainLoss.toFixed(2)} ({gainLoss >= 0 ? '+' : ''}{gainLossPercentage.toFixed(2)}%)
+              {gainLoss >= 0 ? '+' : ''}{formatRupiah(gainLoss)} ({gainLoss >= 0 ? '+' : ''}{gainLossPercentage.toFixed(2)}%)
             </div>
             <Button
               variant="ghost"
@@ -124,11 +125,11 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Buy Price:</span>
-                <span>${(item.buy_price || 0).toFixed(2)}</span>
+                <span>{formatRupiah(item.buy_price || 0)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Market Value:</span>
-                <span>${((item.quantity || 0) * (item.current_price || 0)).toLocaleString()}</span>
+                <span>{formatRupiah(((item.quantity || 0) * (item.current_price || 0)))}</span>
               </div>
             </div>
           )}
@@ -148,14 +149,14 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1">
               <div className="font-bold text-lg mb-1">{item.name}</div>
-              <div className="text-2xl font-bold text-red-500">${(item.balance || 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-red-500">{formatRupiah(item.balance || 0)}</div>
             </div>
             <div className="text-right">
               {item.due_date && (
                 <Badge variant={isOverdue ? "destructive" : isDueSoon ? "secondary" : "outline"} className="mb-2">
                   {isOverdue ? `${Math.abs(daysUntilDue)} days overdue` : 
                    isDueSoon ? `Due in ${daysUntilDue} days` : 
-                   `Due ${new Date(item.due_date).toLocaleDateString()}`}
+                   `Due ${new Date(item.due_date).toLocaleDateString('id-ID')}`}
                 </Badge>
               )}
               <div className="text-sm text-muted-foreground">{item.interest_rate}% APR</div>
@@ -165,7 +166,7 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
           <div className="flex justify-between items-center">
             <div className="text-sm">
               <span className="text-muted-foreground">Min Payment: </span>
-              <span className="font-medium">${(item.minimum_payment || 0).toLocaleString()}</span>
+              <span className="font-medium">{formatRupiah(item.minimum_payment || 0)}</span>
             </div>
             <Button
               variant="ghost"
@@ -185,7 +186,7 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Monthly Interest:</span>
-                <span className="text-red-500">${(((item.balance || 0) * (item.interest_rate || 0) / 100) / 12).toFixed(2)}</span>
+                <span className="text-red-500">{formatRupiah(((item.balance || 0) * (item.interest_rate || 0) / 100) / 12)}</span>
               </div>
               {item.notes && (
                 <div className="text-sm">
@@ -215,14 +216,14 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1">
               <div className="text-sm text-muted-foreground mb-1">
-                {new Date(item.calculated_at).toLocaleDateString()}
+                {new Date(item.calculated_at).toLocaleDateString('id-ID')}
               </div>
-              <div className="text-2xl font-bold text-primary">${item.net_worth.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-primary">{formatRupiah(item.net_worth)}</div>
             </div>
             <div className="text-right">
               {previousItem && (
                 <div className={`text-sm font-medium ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {change >= 0 ? '+' : ''}${change.toLocaleString()}
+                  {change >= 0 ? '+' : ''}{formatRupiah(change)}
                   <div className="text-xs">
                     {change >= 0 ? '+' : ''}{changePercentage.toFixed(2)}%
                   </div>
@@ -233,9 +234,9 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
           
           <div className="flex justify-between items-center">
             <div className="text-sm">
-              <span className="text-green-500">Assets: ${item.total_assets.toLocaleString()}</span>
+              <span className="text-green-500">Assets: {formatRupiah(item.total_assets)}</span>
               <span className="text-muted-foreground mx-2">|</span>
-              <span className="text-red-500">Liabilities: ${item.total_liabilities.toLocaleString()}</span>
+              <span className="text-red-500">Liabilities: {formatRupiah(item.total_liabilities)}</span>
             </div>
             <Button
               variant="ghost"
@@ -251,15 +252,15 @@ export const MobileCardView = ({ data, type }: MobileCardViewProps) => {
             <div className="mt-3 pt-3 border-t border-border space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Total Assets:</span>
-                <span className="text-green-500 font-medium">${item.total_assets.toLocaleString()}</span>
+                <span className="text-green-500 font-medium">{formatRupiah(item.total_assets)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Total Liabilities:</span>
-                <span className="text-red-500 font-medium">${item.total_liabilities.toLocaleString()}</span>
+                <span className="text-red-500 font-medium">{formatRupiah(item.total_liabilities)}</span>
               </div>
               <div className="flex justify-between text-sm font-medium">
                 <span className="text-muted-foreground">Net Worth:</span>
-                <span className="text-primary">${item.net_worth.toLocaleString()}</span>
+                <span className="text-primary">{formatRupiah(item.net_worth)}</span>
               </div>
             </div>
           )}

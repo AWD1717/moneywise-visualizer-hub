@@ -1,97 +1,73 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Settings as SettingsIcon, Database, Bell, Shield, Download } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Database, Webhook } from "lucide-react";
+import { WebhookSettingsModal } from "@/components/modals/WebhookSettingsModal";
 
 const Settings = () => {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-        <Badge variant="outline" className="text-primary border-primary/20">
-          <Database className="w-3 h-3 mr-1" />
-          Supabase Connected
-        </Badge>
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
+      <div className="flex items-center gap-2">
+        <SettingsIcon className="w-6 h-6 sm:w-8 sm:h-8" />
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Pengaturan</h2>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 sm:gap-6">
         {/* Profile Settings */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <SettingsIcon className="w-5 h-5" />
-              Profile Settings
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <User className="w-5 h-5" />
+              Profil Pengguna
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <Label htmlFor="firstName" className="text-sm font-medium">
-                  First Name
-                </Label>
-                <Input id="firstName" placeholder="John" className="bg-background border-border" />
+                <h3 className="font-medium">Informasi Akun</h3>
+                <p className="text-sm text-muted-foreground">Kelola informasi profil dan preferensi akun Anda</p>
               </div>
-              <div>
-                <Label htmlFor="lastName" className="text-sm font-medium">
-                  Last Name
-                </Label>
-                <Input id="lastName" placeholder="Doe" className="bg-background border-border" />
-              </div>
+              <Button variant="outline">Edit Profil</Button>
             </div>
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email Address
-              </Label>
-              <Input id="email" type="email" placeholder="john.doe@example.com" className="bg-background border-border" />
-            </div>
-            <Button className="bg-primary hover:bg-primary/90">Save Changes</Button>
           </CardContent>
         </Card>
 
         {/* Notification Settings */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Bell className="w-5 h-5" />
-              Notification Settings
+              Notifikasi
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <Label className="text-sm font-medium">Budget Alerts</Label>
-                <p className="text-xs text-muted-foreground">Get notified when you're close to budget limits</p>
+                <h3 className="font-medium">Pengaturan Pemberitahuan</h3>
+                <p className="text-sm text-muted-foreground">Atur kapan dan bagaimana Anda ingin menerima notifikasi</p>
               </div>
-              <Switch />
+              <Button variant="outline">Kelola Notifikasi</Button>
             </div>
-            <Separator />
-            <div className="flex items-center justify-between">
+          </CardContent>
+        </Card>
+
+        {/* SuperChat Webhook Settings */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Webhook className="w-5 h-5" />
+              SuperChat Integration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <Label className="text-sm font-medium">Bill Reminders</Label>
-                <p className="text-xs text-muted-foreground">Receive reminders for upcoming bills</p>
+                <h3 className="font-medium">Webhook Configuration</h3>
+                <p className="text-sm text-muted-foreground">Konfigurasi webhook untuk integrasi SuperChat dengan sistem eksternal</p>
+                <Badge variant="secondary" className="mt-2">SuperChat</Badge>
               </div>
-              <Switch />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm font-medium">Investment Updates</Label>
-                <p className="text-xs text-muted-foreground">Get notified about significant portfolio changes</p>
-              </div>
-              <Switch />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm font-medium">Monthly Reports</Label>
-                <p className="text-xs text-muted-foreground">Receive monthly financial summary reports</p>
-              </div>
-              <Switch defaultChecked />
+              <WebhookSettingsModal />
             </div>
           </CardContent>
         </Card>
@@ -99,40 +75,18 @@ const Settings = () => {
         {/* Security Settings */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Shield className="w-5 h-5" />
-              Security Settings
+              Keamanan
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="currentPassword" className="text-sm font-medium">
-                Current Password
-              </Label>
-              <Input id="currentPassword" type="password" className="bg-background border-border" />
-            </div>
-            <div>
-              <Label htmlFor="newPassword" className="text-sm font-medium">
-                New Password
-              </Label>
-              <Input id="newPassword" type="password" className="bg-background border-border" />
-            </div>
-            <div>
-              <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirm New Password
-              </Label>
-              <Input id="confirmPassword" type="password" className="bg-background border-border" />
-            </div>
-            <Button variant="outline">Change Password</Button>
-            
-            <Separator className="my-4" />
-            
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <Label className="text-sm font-medium">Two-Factor Authentication</Label>
-                <p className="text-xs text-muted-foreground">Add an extra layer of security to your account</p>
+                <h3 className="font-medium">Password & Security</h3>
+                <p className="text-sm text-muted-foreground">Kelola password dan pengaturan keamanan akun</p>
               </div>
-              <Button variant="outline" size="sm">Enable 2FA</Button>
+              <Button variant="outline">Ubah Password</Button>
             </div>
           </CardContent>
         </Card>
@@ -140,55 +94,50 @@ const Settings = () => {
         {/* Data Management */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Database className="w-5 h-5" />
-              Data Management
+              Manajemen Data
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm font-medium">Database Connection</Label>
-                <p className="text-xs text-muted-foreground">Connected to Supabase database</p>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h3 className="font-medium">Export Data</h3>
+                  <p className="text-sm text-muted-foreground">Download data keuangan Anda dalam format CSV atau Excel</p>
+                </div>
+                <Button variant="outline">Export Data</Button>
               </div>
-              <Badge variant="outline" className="text-green-500 border-green-500/20">
-                Connected
-              </Badge>
+              
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t">
+                <div>
+                  <h3 className="font-medium">Backup & Restore</h3>
+                  <p className="text-sm text-muted-foreground">Buat backup data atau restore dari backup sebelumnya</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline">Backup</Button>
+                  <Button variant="outline">Restore</Button>
+                </div>
+              </div>
             </div>
-            
-            <Separator />
-            
-            <div className="flex items-center justify-between">
+          </CardContent>
+        </Card>
+
+        {/* Danger Zone */}
+        <Card className="bg-card border-border border-red-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg text-red-600">
+              <Shield className="w-5 h-5" />
+              Danger Zone
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <Label className="text-sm font-medium">Auto Backup</Label>
-                <p className="text-xs text-muted-foreground">Automatically backup your data weekly</p>
+                <h3 className="font-medium text-red-600">Hapus Akun</h3>
+                <p className="text-sm text-muted-foreground">Tindakan ini akan menghapus akun dan semua data secara permanen</p>
               </div>
-              <Switch defaultChecked />
-            </div>
-            
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm font-medium">Export Data</Label>
-                <p className="text-xs text-muted-foreground">Download your financial data</p>
-              </div>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-            </div>
-            
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm font-medium text-red-500">Delete Account</Label>
-                <p className="text-xs text-muted-foreground">Permanently delete your account and all data</p>
-              </div>
-              <Button variant="destructive" size="sm">
-                Delete Account
-              </Button>
+              <Button variant="destructive">Hapus Akun</Button>
             </div>
           </CardContent>
         </Card>

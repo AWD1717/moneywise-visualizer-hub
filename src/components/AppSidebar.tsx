@@ -8,7 +8,8 @@ import {
   AlertTriangle, 
   Shield, 
   DollarSign,
-  Settings 
+  Settings,
+  MessageCircle
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -25,6 +26,7 @@ import {
 
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
+  { title: "SuperChat", url: "/superchat", icon: MessageCircle },
   { title: "Cashflows", url: "/cashflows", icon: TrendingUp },
   { title: "Budgets", url: "/budgets", icon: Calculator },
   { title: "Accounts", url: "/accounts", icon: CreditCard },

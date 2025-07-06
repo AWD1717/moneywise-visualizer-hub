@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Filter } from "lucide-react";
 import { useCashflows } from "@/hooks/useCashflows";
 import { AddTransactionModal } from "@/components/modals/AddTransactionModal";
+import { EditCashflowModal } from "@/components/modals/EditCashflowModal";
+import { DeleteCashflowModal } from "@/components/modals/DeleteCashflowModal";
 import { MobileCardView } from "@/components/MobileCardView";
 
 const formatRupiah = (amount: number) => {
@@ -58,27 +60,27 @@ const Cashflows = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Arus Kas</h2>
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Arus Kas</h2>
         <AddTransactionModal />
       </div>
 
       <Card className="bg-card border-border">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Riwayat Transaksi</CardTitle>
-            <div className="flex items-center gap-2">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="text-lg sm:text-xl">Riwayat Transaksi</CardTitle>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Cari transaksi..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64 bg-background border-border"
+                  className="pl-10 w-full sm:w-64 bg-background border-border"
                 />
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
@@ -87,7 +89,44 @@ const Cashflows = () => {
         </CardHeader>
         <CardContent>
           {/* Mobile View */}
-          <MobileCardView data={currentCashflows} type="cashflow" />
+          <div className="md:hidden space-y-3">
+            {currentCashflows.map((flow) => (
+              <Card key={flow.id} className="bg-card border-border">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-muted-foreground mb-1">
+                        {new Date(flow.date).toLocaleDateString('id-ID')}
+                      </div>
+                      <div className="font-semibold text-base mb-1">
+                        {flow.accounts?.name || 'Unknown Account'}
+                      </div>
+                      <Badge className={getTypeColor(flow.types?.name || "")}>
+                        {flow.types?.name}
+                      </Badge>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-lg font-bold ${
+                        (flow.credit || 0) > 0 ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {(flow.credit || 0) > 0 ? '+' : '-'}{formatRupiah(Math.abs(flow.credit || flow.debit || 0))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground mb-3">
+                    <div><strong>Kategori:</strong> {flow.categories?.name || 'No Category'}</div>
+                    <div><strong>Deskripsi:</strong> {flow.description || 'No description'}</div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <EditCashflowModal cashflow={flow} />
+                    <DeleteCashflowModal cashflow={flow} />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
           {/* Desktop View */}
           <div className="hidden md:block overflow-x-auto">
@@ -100,6 +139,7 @@ const Cashflows = () => {
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Kategori</th>
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Deskripsi</th>
                   <th className="text-right py-3 px-4 font-medium text-muted-foreground">Jumlah</th>
+                  <th className="text-center py-3 px-4 font-medium text-muted-foreground">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,6 +161,12 @@ const Cashflows = () => {
                         <span className="text-red-500">-{formatRupiah(flow.debit || 0)}</span>
                       )}
                     </td>
+                    <td className="py-3 px-4">
+                      <div className="flex gap-2 justify-center">
+                        <EditCashflowModal cashflow={flow} />
+                        <DeleteCashflowModal cashflow={flow} />
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -128,7 +174,7 @@ const Cashflows = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
             <div className="text-sm text-muted-foreground">
               Menampilkan {startIndex + 1} sampai {Math.min(endIndex, filteredCashflows.length)} dari{" "}
               {filteredCashflows.length} hasil

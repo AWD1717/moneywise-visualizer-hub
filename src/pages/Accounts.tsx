@@ -1,10 +1,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CreditCard, PiggyBank, Building } from "lucide-react";
 import { useLiquidAssets } from "@/hooks/useLiquidAssets";
 import { AddAccountModal } from "@/components/modals/AddAccountModal";
+import { AccountDetailModal } from "@/components/modals/AccountDetailModal";
 
 const formatRupiah = (amount: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -62,20 +62,20 @@ const Accounts = () => {
     .reduce((sum, account) => sum + Math.abs(account.balance), 0) || 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Akun</h2>
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Akun</h2>
         <AddAccountModal />
       </div>
 
       {/* Account Summary */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Aset</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">{formatRupiah(totalAssets)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-500">{formatRupiah(totalAssets)}</div>
           </CardContent>
         </Card>
 
@@ -84,7 +84,7 @@ const Accounts = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Kewajiban</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">{formatRupiah(totalLiabilities)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-red-500">{formatRupiah(totalLiabilities)}</div>
           </CardContent>
         </Card>
 
@@ -93,13 +93,13 @@ const Accounts = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Kekayaan Bersih</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{formatRupiah(totalAssets - totalLiabilities)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-primary">{formatRupiah(totalAssets - totalLiabilities)}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Accounts List */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         {accounts?.map((account) => {
           const AccountIcon = getAccountIcon(account.accounts?.type || "");
           
@@ -112,7 +112,7 @@ const Accounts = () => {
                       <AccountIcon className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{account.accounts?.name}</CardTitle>
+                      <CardTitle className="text-base sm:text-lg">{account.accounts?.name}</CardTitle>
                       <Badge className={getAccountTypeColor(account.accounts?.type || "")}>
                         {account.accounts?.type}
                       </Badge>
@@ -121,17 +121,15 @@ const Accounts = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-end justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Saldo Saat Ini</p>
-                    <p className={`text-2xl font-bold ${account.balance >= 0 ? 'text-primary' : 'text-red-500'}`}>
+                    <p className={`text-xl sm:text-2xl font-bold ${account.balance >= 0 ? 'text-primary' : 'text-red-500'}`}>
                       {account.balance >= 0 ? '+' : '-'}{formatRupiah(Math.abs(account.balance))}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <Button variant="outline" size="sm">
-                      Lihat Detail
-                    </Button>
+                  <div className="w-full sm:w-auto">
+                    <AccountDetailModal account={account} />
                   </div>
                 </div>
               </CardContent>
