@@ -18,24 +18,56 @@ export const testSupabaseConnection = async () => {
     
     console.log("Supabase connection test successful");
     
-    // Test each related table
-    const tables = ['accounts', 'types', 'categories'];
-    const tableTests = await Promise.all(
-      tables.map(async (table) => {
+    // Test each related table with proper typing
+    const tableTests = await Promise.all([
+      // Test accounts table
+      (async () => {
         try {
           const { data, error } = await supabase
-            .from(table)
+            .from("accounts")
             .select("id, name")
             .limit(5);
           
-          console.log(`${table} table test:`, { data, error });
-          return { table, success: !error, data, error };
+          console.log("accounts table test:", { data, error });
+          return { table: "accounts", success: !error, data, error };
         } catch (err) {
-          console.error(`Error testing ${table}:`, err);
-          return { table, success: false, error: err };
+          console.error("Error testing accounts:", err);
+          return { table: "accounts", success: false, error: err };
         }
-      })
-    );
+      })(),
+      
+      // Test types table
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from("types")
+            .select("id, name")
+            .limit(5);
+          
+          console.log("types table test:", { data, error });
+          return { table: "types", success: !error, data, error };
+        } catch (err) {
+          console.error("Error testing types:", err);
+          return { table: "types", success: false, error: err };
+        }
+      })(),
+      
+      // Test categories table
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from("categories")
+            .select("id, name")
+            .limit(5);
+          
+          console.log("categories table test:", { data, error });
+          return { table: "categories", success: !error, data, error };
+        } catch (err) {
+          console.error("Error testing categories:", err);
+          return { table: "categories", success: false, error: err };
+        }
+      })()
+    ]);
     
     return { 
       success: true, 
