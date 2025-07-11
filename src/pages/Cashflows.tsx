@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, AlertCircle } from "lucide-react";
 import { useCashflows } from "@/hooks/useCashflows";
 import { AddTransactionModal } from "@/components/modals/AddTransactionModal";
 import { EditCashflowModal } from "@/components/modals/EditCashflowModal";
 import { DeleteCashflowModal } from "@/components/modals/DeleteCashflowModal";
-import { MobileCardView } from "@/components/MobileCardView";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formatRupiah = (amount: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -21,15 +21,44 @@ const formatRupiah = (amount: number) => {
 };
 
 const Cashflows = () => {
-  const { data: cashflowsData, isLoading } = useCashflows();
+  const { data: cashflowsData, isLoading, error, refetch } = useCashflows();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  console.log("Cashflows component state:", { cashflowsData, isLoading, error });
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2">Memuat data...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Arus Kas</h2>
+          <AddTransactionModal />
+        </div>
+        
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Gagal memuat data cashflow. Error: {error?.message || 'Unknown error'}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => refetch()}
+              className="ml-2"
+            >
+              Coba Lagi
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -65,6 +94,15 @@ const Cashflows = () => {
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Arus Kas</h2>
         <AddTransactionModal />
       </div>
+
+      {(!cashflowsData || cashflowsData.length === 0) && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Belum ada data cashflow. Tambahkan transaksi pertama Anda dengan mengklik tombol "Add Transaction" di atas.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card className="bg-card border-border">
         <CardHeader className="pb-4">
@@ -174,33 +212,35 @@ const Cashflows = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-            <div className="text-sm text-muted-foreground">
-              Menampilkan {startIndex + 1} sampai {Math.min(endIndex, filteredCashflows.length)} dari{" "}
-              {filteredCashflows.length} hasil
+          {filteredCashflows.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+              <div className="text-sm text-muted-foreground">
+                Menampilkan {startIndex + 1} sampai {Math.min(endIndex, filteredCashflows.length)} dari{" "}
+                {filteredCashflows.length} hasil
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Sebelumnya
+                </Button>
+                <span className="text-sm px-3 py-1 bg-primary/10 text-primary rounded">
+                  {currentPage} dari {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Selanjutnya
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                Sebelumnya
-              </Button>
-              <span className="text-sm px-3 py-1 bg-primary/10 text-primary rounded">
-                {currentPage} dari {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Selanjutnya
-              </Button>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
